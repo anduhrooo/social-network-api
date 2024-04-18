@@ -14,6 +14,8 @@ router.get('/', (req, res) => {
 // Get request for single user by id
 router.get('/:id', (req, res) => {
   User.findOne({ _id: req.params.id })
+  .populate({ path: 'thoughts', select: '-__v' })
+    .populate({ path: 'friends', select: '-__v' })
     .then(dbUserData => res.json(dbUserData))
     .catch(err => {
       console.log(err);

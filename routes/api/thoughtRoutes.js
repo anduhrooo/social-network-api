@@ -5,7 +5,7 @@ const router = require('express').Router();
 // GET all thoughts
 router.get('/', (req, res) => {
   Thought.find({})
-    .then(dbThoughtData => res.json(dbThoughtData))
+    .then(result => res.json(result))
     .catch(err => {
       console.log(err);
       res.status(400).json(err);
@@ -15,7 +15,8 @@ router.get('/', (req, res) => {
 // Get request for single thought by id
 router.get('/:id', (req, res) => {
   Thought.findOne({ _id: req.params.id })
-    .then(dbThoughtData => res.json(dbThoughtData))
+  .populate({ path: 'reactions', select: '-__v' })
+    .then(result => res.json(result))
     .catch(err => {
       console.log(err);
       res.status(400).json(err);
@@ -25,10 +26,10 @@ router.get('/:id', (req, res) => {
 // POST a new thought
 router.post('/', (req, res) => {
   Thought.create(req.body)
-    .then((dbThoughtData) => {
+    .then((result) => {
       return User.findOneAndUpdate(
         { _id: req.body.userId },
-        { $push: { thoughts: dbThoughtData._id } },
+        { $push: { thoughts: result._id } },
         { new: true }
       );
     }
@@ -52,12 +53,12 @@ router.put('/:id', (req, res) => {
   Thought.findOneAndUpdate({ _id: req.params.id
     }, req.body
     , { new: true })
-    .then(dbThoughtData => {
-      if (!dbThoughtData) {
+    .then(result => {
+      if (!result) {
         res.status(404).json({ message: 'No thought found with this id!'});
         return;
       }
-      res.json(dbThoughtData);
+      res.json(result);
     })
     .catch(err => {
       console.log(err);
@@ -69,12 +70,12 @@ router.put('/:id', (req, res) => {
 // DELETE to remove a thought by id
 router.delete('/:id', (req, res) => {
   Thought.findOneAndDelete({ _id: req.params.id })
-    .then(dbThoughtData => {
-      if (!dbThoughtData) {
+    .then(result => {
+      if (!result) {
         res.status(404).json({ message: 'No thought found with this id!'});
         return;
       }
-      res.json(dbThoughtData);
+      res.json(result);
     })
     .catch(err => {
       console.log(err);
@@ -89,12 +90,12 @@ router.post('/:thoughtId/reactions', (req, res) => {
     { $addToSet: { reactions: req.body } },
     { new: true }
   )
-    .then(dbThoughtData => {
-      if (!dbThoughtData) {
+    .then(result => {
+      if (!result) {
         res.status(404).json({ message: 'No thought found with this id!'});
         return;
       }
-      res.json(dbThoughtData);
+      res.json(result);
     })
     .catch(err => {
       console.log(err);
@@ -109,7 +110,7 @@ router.delete('/:thoughtId/reactions/:reactionId', (req, res) => {
     { $pull: { reactions: { reactionId: req.params.reactionId } } },
     { new: true }
   )
-    .then(dbThoughtData => res.json(dbThoughtData))
+    .then(result => res.json(result))
     .catch(err => {
       console.log(err);
       res.status(400).json(err);
